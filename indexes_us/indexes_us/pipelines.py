@@ -7,14 +7,16 @@
 
 from scrapy.exporters import CsvItemExporter
 
+
 class IndexesUsPipeline(object):
     def process_item(self, item, spider):
         return item
 
+
 class NasdaqPipeline(object):
 
     def __init__(self, file_name):
-        self.file       = open(file_name.upper()+ "_5Y.csv", "wb")
+        self.file       = open(file_name.upper() + "_5Y.csv", "wb")
         self.exporter   = CsvItemExporter(self.file)
 
     @classmethod

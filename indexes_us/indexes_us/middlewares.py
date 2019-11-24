@@ -107,6 +107,7 @@ class IndexesUsDownloaderMiddleware(object):
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
+
 class RandomUserAgent(object):
 
     def __init__(self, agents):
@@ -119,8 +120,9 @@ class RandomUserAgent(object):
     def process_request(self, request, spider):
         request.headers.setdefault("User-Agent", random.choice(self.agents))
 
+
 class NasdaqMiddleware(object):
-    
+
     def process_request(self, request, spider):
 
         data    = []
@@ -139,7 +141,7 @@ class NasdaqMiddleware(object):
                 
                 # select time
                 driver.find_element_by_xpath(".//div[@class=\"table-tabs__list\"]/button[5]").click()
-                time.sleep(10)
+                time.sleep(5)
                 data.append(driver.page_source)
 
             if i > 0:
