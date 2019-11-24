@@ -10,9 +10,10 @@ from scrapy import signals
 import scrapy
 import time
 import json
+import random
 
 
-class StockTwSpiderMiddleware(object):
+class IndexesUsSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
@@ -60,7 +61,7 @@ class StockTwSpiderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class StockTwDownloaderMiddleware(object):
+class IndexesUsDownloaderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
@@ -106,8 +107,20 @@ class StockTwDownloaderMiddleware(object):
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
-class NdxMiddleware(object):
+class RandomUserAgent(object):
 
+    def __init__(self, agents):
+        self.agents = agents
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings.getlist("USER_AGENTS"))
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("User-Agent", random.choice(self.agents))
+
+class NasdaqMiddleware(object):
+    
     def process_request(self, request, spider):
 
         data    = []
@@ -116,12 +129,15 @@ class NdxMiddleware(object):
         driver.get(url)
 
         for i in range(10):
+            
             if i == 0:
 
+                # click popup
                 time.sleep(2)
                 driver.find_element_by_xpath(".//button[contains(@class, \"agree-button\") and contains(@class, \"eu-cookie-compliance-default-button\")]").click()
                 time.sleep(2)
                 
+                # select time
                 driver.find_element_by_xpath(".//div[@class=\"table-tabs__list\"]/button[5]").click()
                 time.sleep(10)
                 data.append(driver.page_source)

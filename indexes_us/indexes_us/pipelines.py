@@ -7,16 +7,23 @@
 
 from scrapy.exporters import CsvItemExporter
 
-class StockTwPipeline(object):
+class IndexesUsPipeline(object):
     def process_item(self, item, spider):
         return item
 
-class NdxPipeline(object):
+class NasdaqPipeline(object):
+
+    def __init__(self, file_name):
+        self.file       = open(file_name.upper()+ "_5Y.csv", "wb")
+        self.exporter   = CsvItemExporter(self.file)
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        file_name = getattr(crawler.spider, "name")
+        return cls(file_name)
 
     def open_spider(self, spider):
         
-        self.file       = open("NDX_5Y.csv", "wb")
-        self.exporter   = CsvItemExporter(self.file)
         self.exporter.start_exporting()
 
     def process_item(self, item, spider):

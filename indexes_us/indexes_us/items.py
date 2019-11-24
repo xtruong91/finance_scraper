@@ -8,15 +8,15 @@
 import scrapy
 
 
-class StockTwItem(scrapy.Item):
+class IndexesUsItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
 
-class StockItem(scrapy.Item):
-    date    = scrapy.Field()
-    close   = scrapy.Field()
-    volume  = scrapy.Field()
-    open    = scrapy.Field()
-    high    = scrapy.Field()
-    low     = scrapy.Field()
+class TimeFrame(scrapy.Item):
+    DATE    = scrapy.Field()
+    CLOSE   = scrapy.Field()
+    VOLUME  = scrapy.Field()
+    OPEN    = scrapy.Field()
+    HIGH    = scrapy.Field()
+    LOW     = scrapy.Field()
