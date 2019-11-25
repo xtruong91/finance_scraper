@@ -10,5 +10,7 @@ configure_logging({'LOG_FORMAT': '%(levelname)s: %(message)s'})
 runner = CrawlerRunner(setting)
 
 d = runner.crawl(SpxSpider)
+d = runner.crawl(NdxSpider)
+d = runner.join()
 d.addBoth(lambda _: reactor.stop())
 reactor.run()

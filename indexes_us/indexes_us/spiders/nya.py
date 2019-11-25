@@ -5,10 +5,10 @@ from lxml import etree
 from indexes_us.items import TimeFrame
 
 
-class SpxSpider(scrapy.Spider):
-    name = 'spx'
+class NyaSpider(scrapy.Spider):
+    name = 'nya'
     allowed_domains = ['www.nasdaq.com']
-    start_urls = ['https://www.nasdaq.com/market-activity/index/spx/historical']
+    start_urls = ['https://www.nasdaq.com/market-activity/index/nya/historical']
 
     def parse(self, response):
 

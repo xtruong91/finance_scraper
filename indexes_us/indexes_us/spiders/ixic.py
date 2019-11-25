@@ -5,13 +5,13 @@ from lxml import etree
 from indexes_us.items import TimeFrame
 
 
-class SpxSpider(scrapy.Spider):
-    name = 'spx'
+class IxicSpider(scrapy.Spider):
+    name = 'ixic'
     allowed_domains = ['www.nasdaq.com']
-    start_urls = ['https://www.nasdaq.com/market-activity/index/spx/historical']
+    start_urls = ['https://www.nasdaq.com/market-activity/index/ixic/historical']
 
     def parse(self, response):
-
+        
         frame = TimeFrame()
 
         for i in json.loads(response.body):

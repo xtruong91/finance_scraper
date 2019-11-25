@@ -5,18 +5,12 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from scrapy import signals
 import scrapy
-import time
-import json
-import random
+from scrapy import signals
+from selenium import webdriver
 
 
-class IndexesUsSpiderMiddleware(object):
+class PoolSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
@@ -64,7 +58,7 @@ class IndexesUsSpiderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class IndexesUsDownloaderMiddleware(object):
+class PoolDownloaderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
@@ -111,81 +105,18 @@ class IndexesUsDownloaderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class RandomProxyMiddleware(object):
-
-    def __init__(self, proxies):
-        self.proxies = proxies
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler.settings.getlist("PROXIES"))
-
-    def process_request(self, request, spider):
-        request.meta["proxy"] = random.choice(self.proxies)
-
-
-class RandomUserAgent(object):
-
-    def __init__(self, agents):
-        self.agents = agents
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler.settings.getlist("USER_AGENTS"))
-
-    def process_request(self, request, spider):
-        request.headers.setdefault("User-Agent", random.choice(self.agents))
-
-
-class NasdaqMiddleware(object):
-
-    def __init__(self, proxies, agents):
-        self.proxies = proxies
-        self.agents = agents
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler.settings.getlist("PROXIES"),
-                   crawler.settings.getlist("USER_AGENTS"))
+class SeleniumMiddleware(object):
 
     def process_request(self, request, spider):
 
-        data = []
         url = request.url
         options = webdriver.ChromeOptions()
 
-        # rotate proxy
-        options.add_argument('--proxy-server=%s' % random.choice(self.proxies))
-
-        # rotate user agent
-        options.add_argument('--user-agent=%s' % random.choice(self.agents))
-
         driver = webdriver.Chrome(chrome_options=options)
-        driver.delete_all_cookies()
         driver.get(url)
-
-        for i in range(10):
-
-            if i == 0:
-
-                # click popup
-                time.sleep(10)
-                driver.find_element_by_xpath(".//button[contains(@class, \"agree-button\") and contains(@class, \"eu-cookie-compliance-default-button\")]").click()
-                time.sleep(2)
-
-                # select time
-                driver.find_element_by_xpath(".//div[@class=\"table-tabs__list\"]/button[5]").click()
-                time.sleep(5)
-                data.append(driver.page_source)
-
-            if i > 0:
-                driver.find_element_by_xpath('.//button[@class="pagination__next"]').click()
-                time.sleep(5)
-                data.append(driver.page_source)
-
         driver.quit()
 
         return scrapy.http.HtmlResponse(url=url,
                                         status=200,
-                                        body=json.dumps(data).encode('utf-8'),
-                                        encoding='utf-8')
+                                        body=driver.body.encode("utf-8"),
+                                        encoding="utf-8")

@@ -25,7 +25,7 @@ class NasdaqPipeline(object):
         return cls(file_name)
 
     def open_spider(self, spider):
-        
+
         self.exporter.start_exporting()
 
     def process_item(self, item, spider):

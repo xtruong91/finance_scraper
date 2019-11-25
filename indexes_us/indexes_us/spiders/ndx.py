@@ -11,15 +11,15 @@ class NdxSpider(scrapy.Spider):
     start_urls = ['https://www.nasdaq.com/market-activity/index/ndx/historical']
 
     def parse(self, response):
-     
+
         frame = TimeFrame()
 
         for i in json.loads(response.body):
-            
+
             data = etree.HTML(i)
             frame_list = data.xpath('.//tbody[@class="historical-data__table-body"]/tr')
             for j in frame_list:
-                
+
                 frame['DATE'] = j.xpath('./th[1]/text()')[0]
                 frame['CLOSE'] = j.xpath('./td[1]/text()')[0][1:]
                 frame['VOLUME'] = j.xpath('./td[2]/text()')[0]
