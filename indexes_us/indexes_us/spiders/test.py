@@ -10,6 +10,3 @@ class TestSpider(scrapy.Spider):
 
     def parse(self, response):
         logging.debug("*" * 40)
-        logging.debug("response text: %s" % response.text)
-        logging.debug("response headers: %s" % response.headers)
-        logging.debug("request headers: %s" % response.request.headers)

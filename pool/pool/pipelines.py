@@ -17,7 +17,7 @@ class PoolPipeline(object):
 class ProxyPipeline(object):
 
     def __init__(self, file_name):
-        self.file = open(file_name.upper() + ".csv", "wb")
+        self.file = open("../" + file_name.upper() + ".csv", "wb")
         self.exporter = CsvItemExporter(self.file)
 
     @classmethod
@@ -39,10 +39,11 @@ class ProxyPipeline(object):
         self.exporter.finish_exporting()
         self.file.close()
 
+
 class AgentPipeline(object):
-    
+
     def __init__(self, file_name):
-        self.file = open(file_name.upper() + ".csv", "wb")
+        self.file = open("../" + file_name.upper() + ".csv", "wb")
         self.exporter = CsvItemExporter(self.file)
 
     @classmethod

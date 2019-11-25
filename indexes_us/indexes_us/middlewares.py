@@ -6,14 +6,12 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from scrapy import signals
 import scrapy
 import time
 import json
 import random
+import pandas
 
 
 class IndexesUsSpiderMiddleware(object):
@@ -111,30 +109,59 @@ class IndexesUsDownloaderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class RandomProxyMiddleware(object):
+class SeleniumMiddleware(object):
 
-    def __init__(self, proxies):
-        self.proxies = proxies
+    def random_proxy(self):
 
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler.settings.getlist("PROXIES"))
+        url = "http://free-proxy-list.net"
+        option = webdriver.ChromeOptions()
+        option.add_argument('--headless')
+
+        driver = webdriver.Chrome(chrome_options=option)
+        driver.get(url)
+        time.sleep(3)
+
+        row = int(random.randint(1, 20))
+        ip = driver.find_element_by_xpath("//tbody/tr[{row}]/td[1]".format(row=row)).text
+        port = driver.find_element_by_xpath("//tbody/tr[{row}]/td[2]".format(row=row)).text
+        proxy = "{ip}:{port}".format(ip=ip, port=port)
+        driver.close()
+
+        return proxy
+
+    def random_agent(self):
+
+        url = "https://deviceatlas.com/blog/list-of-user-agent-strings"
+        option = webdriver.ChromeOptions()
+        option.add_argument('--headless')
+
+        driver = webdriver.Chrome(chrome_options=option)
+        driver.get(url)
+        time.sleep(3)
+
+        agent_list = driver.find_elements_by_xpath("//td")
+        agent = (random.choice(agent_list)).text
+        driver.close()
+
+        return agent
 
     def process_request(self, request, spider):
-        request.meta["proxy"] = random.choice(self.proxies)
 
+        url = request.url
+        options = webdriver.ChromeOptions()
 
-class RandomUserAgent(object):
+        # rotate proxy and agent
+        options.add_argument('--proxy-server=%s' % self.random_proxy())
+        options.add_argument('--user-agent=%s' % self.random_agent())
 
-    def __init__(self, agents):
-        self.agents = agents
+        driver = webdriver.Chrome(chrome_options=options)
+        driver.get(url)
+        time.sleep(10)
 
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler.settings.getlist("USER_AGENTS"))
-
-    def process_request(self, request, spider):
-        request.headers.setdefault("User-Agent", random.choice(self.agents))
+        return scrapy.http.HtmlResponse(url=url,
+                                        status=200,
+                                        body=driver.page_source.encode("utf-8"),
+                                        encoding="utf-8")
 
 
 class NasdaqMiddleware(object):

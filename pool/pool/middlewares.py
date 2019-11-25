@@ -118,5 +118,5 @@ class SeleniumMiddleware(object):
 
         return scrapy.http.HtmlResponse(url=url,
                                         status=200,
-                                        body=driver.body.encode("utf-8"),
+                                        body=driver.page_source.encode("utf-8"),
                                         encoding="utf-8")
