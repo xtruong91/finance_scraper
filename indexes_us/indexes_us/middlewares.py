@@ -9,9 +9,9 @@ from selenium import webdriver
 from scrapy import signals
 import scrapy
 import time
-import requests
 import json
 import random
+import loguru
 
 
 class IndexesUsSpiderMiddleware(object):
@@ -113,54 +113,65 @@ class RotateProxyMiddleware(object):
 
     def process_request(self, request, spider):
 
+        # webdriver setting
         option = webdriver.ChromeOptions()
-        # option.add_argument('--headless')
+        option.add_argument('--headless')
 
+        # webdriver request
         driver = webdriver.Chrome(chrome_options=option)
         driver.get("http://free-proxy-list.net")
-        time.sleep(3)
+        time.sleep(1)
 
+        # real time random select free proxy from website
         row = int(random.randint(1, 20))
         ip = driver.find_element_by_xpath("//tbody/tr[{row}]/td[1]".format(row=row)).text
         port = driver.find_element_by_xpath("//tbody/tr[{row}]/td[2]".format(row=row)).text
         proxy = "{ip}:{port}".format(ip=ip, port=port)
+        loguru.logger.info("Hold Proxy {proxy}".format(proxy=proxy))
+        driver.quit()
 
-        request.cookies["proxy"] = proxy
+        # hold proxy
+        request.meta["proxy"] = proxy
 
 
 class RotateAgentMiddleware(object):
 
     def process_request(self, request, spider):
 
+        # webdriver setting
         option = webdriver.ChromeOptions()
-        # option.add_argument('--headless')
+        option.add_argument('--headless')
 
+        # webdriver request
         driver = webdriver.Chrome(chrome_options=option)
         driver.get("https://deviceatlas.com/blog/list-of-user-agent-strings")
         time.sleep(1)
 
+        # real time random select user agent from website
         agent_list = driver.find_elements_by_xpath("//td")
         agent = (random.choice(agent_list)).text
+        loguru.logger.info("Hold Agent {agent}".format(agent=agent))
+        driver.quit()
 
-        request.cookies["agent"] = agent
+        # hold user agent
+        request.headers["User-Agent"] = agent
 
 
 class SeleniumMiddleware(object):
 
     def process_request(self, request, spider):
 
-        url = request.url
+        # webdriver setting
         options = webdriver.ChromeOptions()
+        # options.add_argument('--proxy-server=%s' % request.meta["proxy"])
+        options.add_argument('--user-agent=%s' % request.headers["User-Agent"])
 
-        # rotate proxy and agent
-        options.add_argument('--proxy-server=%s' % request.cookies["proxy"])
-        options.add_argument('--user-agent=%s' % request.cookies["agent"])
-
+        # webdriver request
         driver = webdriver.Chrome(chrome_options=options)
-        driver.get(url)
+        driver.get(request.url)
         time.sleep(10)
 
-        return scrapy.http.HtmlResponse(url=url,
+        return scrapy.http.HtmlResponse(url=request.url,
                                         status=200,
                                         body=driver.page_source.encode("utf-8"),
                                         encoding="utf-8")
@@ -168,49 +179,40 @@ class SeleniumMiddleware(object):
 
 class NasdaqMiddleware(object):
 
-    def __init__(self, proxies, agents):
-        self.proxies = proxies
-        self.agents = agents
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler.settings.getlist("PROXIES"),
-                   crawler.settings.getlist("USER_AGENTS"))
-
     def process_request(self, request, spider):
 
         data = []
         url = request.url
+
+        # webdriver setting
         options = webdriver.ChromeOptions()
+        # options.add_argument('--proxy-server=%s' % request.meta["proxy"])
+        options.add_argument('--user-agent=%s' % request.headers["User-Agent"])
 
-        # rotate proxy
-        options.add_argument('--proxy-server=%s' % random.choice(self.proxies))
-
-        # rotate user agent
-        options.add_argument('--user-agent=%s' % random.choice(self.agents))
-
+        # webdriver request
         driver = webdriver.Chrome(chrome_options=options)
+        driver.set_window_size(1440, 800)
         driver.delete_all_cookies()
         driver.get(url)
+        time.sleep(15)
 
-        for i in range(10):
+        # clean popup
+        driver.find_element_by_xpath(".//button[contains(@class, \"agree-button\") and contains(@class, \"eu-cookie-compliance-default-button\")]").click()
+        time.sleep(5)
 
-            if i == 0:
+        # select time
+        driver.find_element_by_xpath(".//div[@class=\"table-tabs__list\"]/button[5]").click()
+        time.sleep(5)
 
-                # click popup
-                time.sleep(10)
-                driver.find_element_by_xpath(".//button[contains(@class, \"agree-button\") and contains(@class, \"eu-cookie-compliance-default-button\")]").click()
-                time.sleep(2)
+        # page count
+        count = driver.find_element_by_xpath(".//div[@class=\"pagination__pages\"]/button[8]").text
+        loguru.logger.info("Totally {count} pages".format(count=count))
 
-                # select time
-                driver.find_element_by_xpath(".//div[@class=\"table-tabs__list\"]/button[5]").click()
-                time.sleep(5)
-                data.append(driver.page_source)
+        for i in range(int(count)):
 
-            if i > 0:
-                driver.find_element_by_xpath('.//button[@class="pagination__next"]').click()
-                time.sleep(5)
-                data.append(driver.page_source)
+            data.append(driver.page_source)
+            driver.find_element_by_xpath('.//button[@class="pagination__next"]').click()
+            time.sleep(3)
 
         driver.quit()
 

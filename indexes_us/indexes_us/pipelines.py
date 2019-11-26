@@ -16,8 +16,8 @@ class IndexesUsPipeline(object):
 class NasdaqPipeline(object):
 
     def __init__(self, file_name):
-        self.file       = open(file_name.upper() + "_5Y.csv", "wb")
-        self.exporter   = CsvItemExporter(self.file)
+        self.file = open("../data/indexes_us/" + file_name.upper() + "_5Y.csv", "wb")
+        self.exporter = CsvItemExporter(self.file)
 
     @classmethod
     def from_crawler(cls, crawler):
