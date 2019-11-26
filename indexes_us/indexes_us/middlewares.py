@@ -9,9 +9,9 @@ from selenium import webdriver
 from scrapy import signals
 import scrapy
 import time
+import requests
 import json
 import random
-import pandas
 
 
 class IndexesUsSpiderMiddleware(object):
@@ -109,41 +109,43 @@ class IndexesUsDownloaderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class SeleniumMiddleware(object):
+class RotateProxyMiddleware(object):
 
-    def random_proxy(self):
+    def process_request(self, request, spider):
 
-        url = "http://free-proxy-list.net"
         option = webdriver.ChromeOptions()
-        option.add_argument('--headless')
+        # option.add_argument('--headless')
 
         driver = webdriver.Chrome(chrome_options=option)
-        driver.get(url)
+        driver.get("http://free-proxy-list.net")
         time.sleep(3)
 
         row = int(random.randint(1, 20))
         ip = driver.find_element_by_xpath("//tbody/tr[{row}]/td[1]".format(row=row)).text
         port = driver.find_element_by_xpath("//tbody/tr[{row}]/td[2]".format(row=row)).text
         proxy = "{ip}:{port}".format(ip=ip, port=port)
-        driver.close()
 
-        return proxy
+        request.cookies["proxy"] = proxy
 
-    def random_agent(self):
 
-        url = "https://deviceatlas.com/blog/list-of-user-agent-strings"
+class RotateAgentMiddleware(object):
+
+    def process_request(self, request, spider):
+
         option = webdriver.ChromeOptions()
-        option.add_argument('--headless')
+        # option.add_argument('--headless')
 
         driver = webdriver.Chrome(chrome_options=option)
-        driver.get(url)
-        time.sleep(3)
+        driver.get("https://deviceatlas.com/blog/list-of-user-agent-strings")
+        time.sleep(1)
 
         agent_list = driver.find_elements_by_xpath("//td")
         agent = (random.choice(agent_list)).text
-        driver.close()
 
-        return agent
+        request.cookies["agent"] = agent
+
+
+class SeleniumMiddleware(object):
 
     def process_request(self, request, spider):
 
@@ -151,8 +153,8 @@ class SeleniumMiddleware(object):
         options = webdriver.ChromeOptions()
 
         # rotate proxy and agent
-        options.add_argument('--proxy-server=%s' % self.random_proxy())
-        options.add_argument('--user-agent=%s' % self.random_agent())
+        options.add_argument('--proxy-server=%s' % request.cookies["proxy"])
+        options.add_argument('--user-agent=%s' % request.cookies["agent"])
 
         driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)

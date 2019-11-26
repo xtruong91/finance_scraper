@@ -12,18 +12,21 @@ class SpxSpider(scrapy.Spider):
 
     def parse(self, response):
 
-        frame = TimeFrame()
+        print("=" * 40)
+        print(response.xpath(".//button[contains(@class, \"agree-button\") and contains(@class, \"eu-cookie-compliance-default-button\")]"))
 
-        for i in json.loads(response.body):
+        # frame = TimeFrame()
 
-            data = etree.HTML(i)
-            frame_list = data.xpath('.//tbody[@class="historical-data__table-body"]/tr')
-            for j in frame_list:
+        # for i in json.loads(response.body):
 
-                frame['DATE'] = j.xpath('./th[1]/text()')[0]
-                frame['CLOSE'] = j.xpath('./td[1]/text()')[0][1:]
-                frame['VOLUME'] = j.xpath('./td[2]/text()')[0]
-                frame['OPEN'] = j.xpath('./td[3]/text()')[0][1:]
-                frame['HIGH'] = j.xpath('./td[4]/text()')[0][1:]
-                frame['LOW'] = j.xpath('./td[5]/text()')[0][1:]
-                yield frame
+        #     data = etree.HTML(i)
+        #     frame_list = data.xpath('.//tbody[@class="historical-data__table-body"]/tr')
+        #     for j in frame_list:
+
+        #         frame['DATE'] = j.xpath('./th[1]/text()')[0]
+        #         frame['CLOSE'] = j.xpath('./td[1]/text()')[0][1:]
+        #         frame['VOLUME'] = j.xpath('./td[2]/text()')[0]
+        #         frame['OPEN'] = j.xpath('./td[3]/text()')[0][1:]
+        #         frame['HIGH'] = j.xpath('./td[4]/text()')[0][1:]
+        #         frame['LOW'] = j.xpath('./td[5]/text()')[0][1:]
+        #         yield frame
