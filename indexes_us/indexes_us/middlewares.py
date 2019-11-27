@@ -6,6 +6,9 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from scrapy import signals
 import scrapy
 import time
@@ -114,18 +117,23 @@ class RotateProxyMiddleware(object):
     def process_request(self, request, spider):
 
         # webdriver setting
-        option = webdriver.ChromeOptions()
-        option.add_argument('--headless')
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
 
         # webdriver request
-        driver = webdriver.Chrome(chrome_options=option)
+        driver = webdriver.Chrome(chrome_options=options)
         driver.get("http://free-proxy-list.net")
         time.sleep(1)
 
         # real time random select free proxy from website
         row = int(random.randint(1, 20))
-        ip = driver.find_element_by_xpath("//tbody/tr[{row}]/td[1]".format(row=row)).text
-        port = driver.find_element_by_xpath("//tbody/tr[{row}]/td[2]".format(row=row)).text
+
+        ip_xpath = "//tbody/tr[{row}]/td[1]".format(row=row)
+        ip = driver.find_element_by_xpath(ip_xpath).text
+
+        port_xpath = "//tbody/tr[{row}]/td[2]".format(row=row)
+        port = driver.find_element_by_xpath(port_xpath).text
+
         proxy = "{ip}:{port}".format(ip=ip, port=port)
         loguru.logger.info("Hold Proxy {proxy}".format(proxy=proxy))
         driver.quit()
@@ -139,11 +147,11 @@ class RotateAgentMiddleware(object):
     def process_request(self, request, spider):
 
         # webdriver setting
-        option = webdriver.ChromeOptions()
-        option.add_argument('--headless')
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
 
         # webdriver request
-        driver = webdriver.Chrome(chrome_options=option)
+        driver = webdriver.Chrome(chrome_options=options)
         driver.get("https://deviceatlas.com/blog/list-of-user-agent-strings")
         time.sleep(1)
 
@@ -163,7 +171,7 @@ class SeleniumMiddleware(object):
 
         # webdriver setting
         options = webdriver.ChromeOptions()
-        # options.add_argument('--proxy-server=%s' % request.meta["proxy"])
+        options.add_argument('--proxy-server=%s' % request.meta["proxy"])
         options.add_argument('--user-agent=%s' % request.headers["User-Agent"])
 
         # webdriver request
@@ -173,7 +181,8 @@ class SeleniumMiddleware(object):
 
         return scrapy.http.HtmlResponse(url=request.url,
                                         status=200,
-                                        body=driver.page_source.encode("utf-8"),
+                                        body=driver.page_source
+                                                   .encode("utf-8"),
                                         encoding="utf-8")
 
 
@@ -186,6 +195,7 @@ class NasdaqMiddleware(object):
 
         # webdriver setting
         options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
         # options.add_argument('--proxy-server=%s' % request.meta["proxy"])
         options.add_argument('--user-agent=%s' % request.headers["User-Agent"])
 
@@ -194,24 +204,51 @@ class NasdaqMiddleware(object):
         driver.set_window_size(1440, 800)
         driver.delete_all_cookies()
         driver.get(url)
-        time.sleep(15)
 
         # clean popup
-        driver.find_element_by_xpath(".//button[contains(@class, \"agree-button\") and contains(@class, \"eu-cookie-compliance-default-button\")]").click()
+        popup_xpath = (
+            ".//button["
+            "contains(@class, \"agree-button\")"
+            " and "
+            "contains(@class, \"eu-cookie-compliance-default-button\")"
+            "]"
+        )
+        popup_element = WebDriverWait(driver, 60).until(
+            EC.element_to_be_clickable((By.XPATH, popup_xpath))
+        )
+        loguru.logger.warning(popup_element)
+        popup_element.click()
         time.sleep(5)
 
         # select time
-        driver.find_element_by_xpath(".//div[@class=\"table-tabs__list\"]/button[5]").click()
+        time_xpath = (
+            ".//div["
+            "@class=\"table-tabs__list\""
+            "]/button[5]"
+        )
+        time_element = WebDriverWait(driver, 60).until(
+            EC.element_to_be_clickable((By.XPATH, time_xpath))
+        )
+        time_element.click()
         time.sleep(5)
 
         # page count
-        count = driver.find_element_by_xpath(".//div[@class=\"pagination__pages\"]/button[8]").text
+        count_xpath = (
+            ".//div["
+            "@class=\"pagination__pages\""
+            "]/button[8]"
+        )
+        count = driver.find_element_by_xpath(count_xpath).text
         loguru.logger.info("Totally {count} pages".format(count=count))
 
+        next_xpath = ".//button[@class=\"pagination__next\"]"
         for i in range(int(count)):
 
+            next_element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, next_xpath))
+            )
             data.append(driver.page_source)
-            driver.find_element_by_xpath('.//button[@class="pagination__next"]').click()
+            next_element.click()
             time.sleep(3)
 
         driver.quit()

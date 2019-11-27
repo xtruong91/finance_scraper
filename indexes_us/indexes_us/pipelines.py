@@ -13,10 +13,11 @@ class IndexesUsPipeline(object):
         return item
 
 
-class NasdaqPipeline(object):
+class IndexPipeline(object):
 
     def __init__(self, file_name):
-        self.file = open("../data/indexes_us/" + file_name.upper() + "_5Y.csv", "wb")
+        self.file = open("../data/indexes_us/" + 
+                         file_name.upper() + "_5Y.csv", "wb")
         self.exporter = CsvItemExporter(self.file)
 
     @classmethod
