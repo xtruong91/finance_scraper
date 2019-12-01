@@ -13,6 +13,7 @@ class IndexesUsItem(scrapy.Item):
     # name = scrapy.Field()
     pass
 
+
 class TimeFrame(scrapy.Item):
     DATE    = scrapy.Field()
     CLOSE   = scrapy.Field()
@@ -20,3 +21,8 @@ class TimeFrame(scrapy.Item):
     OPEN    = scrapy.Field()
     HIGH    = scrapy.Field()
     LOW     = scrapy.Field()
+
+
+class TradeFile(scrapy.Item):
+    file_urls = scrapy.Field()
+    files = scrapy.Field()

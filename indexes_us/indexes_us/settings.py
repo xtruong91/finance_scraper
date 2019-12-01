@@ -14,6 +14,8 @@ BOT_NAME = 'indexes_us'
 SPIDER_MODULES = ['indexes_us.spiders']
 NEWSPIDER_MODULE = 'indexes_us.spiders'
 LOG_LEVEL = "INFO"
+FILES_STORE = "D:\\finance_scraper\\data\\indexes_us"
+DOWNLOADER_CLIENT_TLS_METHOD = "TLSv1.2"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'

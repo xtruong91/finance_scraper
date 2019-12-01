@@ -6,6 +6,7 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 from scrapy.exporters import CsvItemExporter
+from scrapy.pipelines.files import FilesPipeline
 
 
 class IndexesUsPipeline(object):
@@ -38,3 +39,10 @@ class IndexPipeline(object):
 
         self.exporter.finish_exporting()
         self.file.close()
+
+
+class NasdaqPipeline(FilesPipeline):
+
+    def file_path(self, request, response=None, info=None):
+
+        return request.url.split("/")[6] + ".csv"

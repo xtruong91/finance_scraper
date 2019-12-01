@@ -12,7 +12,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from scrapy import signals
 import scrapy
 import time
-import json
 import random
 import loguru
 
@@ -190,14 +189,13 @@ class NasdaqMiddleware(object):
 
     def process_request(self, request, spider):
 
-        data = []
         url = request.url
 
         # webdriver setting
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
+        # options.add_argument('--headless')
         # options.add_argument('--proxy-server=%s' % request.meta["proxy"])
-        options.add_argument('--user-agent=%s' % request.headers["User-Agent"])
+        # options.add_argument('--user-agent=%s' % request.headers["User-Agent"])
 
         # webdriver request
         driver = webdriver.Chrome(chrome_options=options)
@@ -233,27 +231,17 @@ class NasdaqMiddleware(object):
         time.sleep(5)
 
         # page count
-        count_xpath = (
-            ".//div["
-            "@class=\"pagination__pages\""
-            "]/button[8]"
+        download_xpath = (
+            ".//a["
+            "@class=\"historical-data__download\""
+            "]"
         )
-        count = driver.find_element_by_xpath(count_xpath).text
-        loguru.logger.info("Totally {count} pages".format(count=count))
-
-        next_xpath = ".//button[@class=\"pagination__next\"]"
-        for i in range(int(count)):
-
-            next_element = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, next_xpath))
-            )
-            data.append(driver.page_source)
-            next_element.click()
-            time.sleep(3)
+        download = driver.find_element_by_xpath(download_xpath).get_attribute("href")
+        loguru.logger.info("Get url: {download}".format(download=download))
 
         driver.quit()
 
         return scrapy.http.HtmlResponse(url=url,
                                         status=200,
-                                        body=json.dumps(data).encode('utf-8'),
+                                        body=download.encode('utf-8'),
                                         encoding='utf-8')
