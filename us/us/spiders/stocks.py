@@ -2,33 +2,29 @@
 import scrapy
 import loguru
 from datetime import date
-from indexes_us.items import TradeFile
+from us.items import HistoryFile
 
 
-class FileSpider(scrapy.Spider):
-    name = "file"
-    allowed_domains = ["www.nasdaq.com"]
-    start_urls = [
-        "https://www.nasdaq.com"
-    ]
+class StocksSpider(scrapy.Spider):
+    name = 'stocks'
+    allowed_domains = ['www.nasdaq.com']
+    start_urls = ['http://www.nasdaq.com/']
     custom_settings = {
         "ITEM_PIPELINES": {
-            "indexes_us.pipelines.NasdaqPipeline": 300
+            "us.pipelines.StockPipeline": 300
         }
     }
 
     def parse(self, response):
 
-        indexes = ["ndx", "spx", "nya", "ixic", "rut"]
+        stocks = ["aapl", "amzn", "tsla", "nflx", "msft"]
 
-        for i in indexes:
-
-            # new data holder
-            new_file = TradeFile()
+        for s in stocks:
+            history = HistoryFile()
             url_tpl = (
                 "https://www.nasdaq.com/api/v1/historical/"
-                "{index}/"
-                "index/"
+                "{stock}/"
+                "stocks/"
                 "{start}/"
                 "{end}"
             )
@@ -39,7 +35,9 @@ class FileSpider(scrapy.Spider):
             end = "{y}-{m}-{d}".format(y=today.year,
                                        m=today.month,
                                        d="0" + str(today.day) if (today.day < 10) else today.day)
-            url = url_tpl.format(index=i.upper(), start=start, end=end)
+            url = url_tpl.format(stock=s.upper(),
+                                 start=start,
+                                 end=end)
             loguru.logger.info(url)
-            new_file["file_urls"] = [url]
-            yield new_file
+            history["file_urls"] = [url]
+            yield history
