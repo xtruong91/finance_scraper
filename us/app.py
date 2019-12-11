@@ -1,8 +1,7 @@
 import shutil
 import schedule
 import time
-
-from scraper import USScraper
+import subprocess
 
 DATA_DIR = "../finance_data/"
 
@@ -10,17 +9,16 @@ DATA_DIR = "../finance_data/"
 class Scraper():
 
     def __init__(self):
-        self.us = USScraper()
+        pass
 
     def clean_all(self):
         shutil.rmtree(DATA_DIR, ignore_errors=True)
 
     def scrape_all(self):
-        self.us.scrape()
+         subprocess.call(["./job.sh"])
 
 
 def job(app):
-    app.clean_all()
     app.scrape_all()
 
 

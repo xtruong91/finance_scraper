@@ -14,7 +14,7 @@ BOT_NAME = 'us'
 SPIDER_MODULES = ['us.spiders']
 NEWSPIDER_MODULE = 'us.spiders'
 LOG_LEVEL = "INFO"
-FILES_STORE = "..\\finance_data\\"
+FILES_STORE = "../../finance_data/"
 DOWNLOADER_CLIENT_TLS_METHOD = "TLSv1.2"
 
 

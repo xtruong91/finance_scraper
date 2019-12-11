@@ -13,6 +13,7 @@ twisted = "*"
 loguru = "*"
 schedule = "*"
 pytest-shutil = "*"
+subprocess-run = "*"
 
 [requires]
 python_version = "3.6"
