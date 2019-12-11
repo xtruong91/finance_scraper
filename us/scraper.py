@@ -9,7 +9,7 @@ setting = get_project_settings()
 configure_logging({'LOG_FORMAT': '%(levelname)s: %(message)s'})
 
 
-class Scraper():
+class USScraper():
 
     def __init__(self):
         self.runner = CrawlerRunner(setting)

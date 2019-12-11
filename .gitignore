@@ -1,6 +1,3 @@
-Pipfile
-Pipfile.lock
-
+finance_data/*
 .vscode/*
-
 *.csv
